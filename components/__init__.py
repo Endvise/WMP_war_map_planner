@@ -52,5 +52,10 @@ def war_map_canvas(
     # Inject before </head>
     html_content = html_content.replace("</head>", f"{config_script}</head>")
 
-    # Render component
+    # Render component - use dynamic height
+    components.html(
+        html_content, 
+        height=800,
+        scrolling=True
+    )
     components.html(html_content, height=700, scrolling=True)

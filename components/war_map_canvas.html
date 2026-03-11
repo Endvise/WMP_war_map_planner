@@ -85,7 +85,7 @@
             min-width: 0;
         }
         
-        /* Top bar with session info */
+        /* Top bar */
         #top-bar {
             height: 36px;
             background: #16213e;
@@ -95,14 +95,6 @@
             gap: 12px;
             border-bottom: 1px solid #0f3460;
             flex-shrink: 0;
-        }
-        #top-bar input {
-            background: #0a0a14;
-            border: 1px solid #0f3460;
-            color: #e8e8e8;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
         }
         
         #canvas-wrapper {
@@ -133,6 +125,70 @@
         .status-dot { width: 6px; height: 6px; border-radius: 50%; }
         .online { background: #00ff88; }
         .offline { background: #ff4444; }
+        
+        /* Right Sidebar - Online Users */
+        #right-sidebar {
+            width: 140px;
+            background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
+            border-left: 1px solid #0f3460;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        
+        .right-title {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid #0f3460;
+        }
+        
+        #online-users {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .online-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 8px;
+            background: #0a0a14;
+            border-radius: 6px;
+            margin-bottom: 6px;
+        }
+        
+        .online-user-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            flex-shrink: 0;
+        }
+        
+        .online-user-name {
+            font-size: 11px;
+            color: #e8e8e8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .online-user-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        
+        .no-users {
+            font-size: 10px;
+            color: #666;
+            text-align: center;
+            padding: 20px 10px;
+        }
         
         /* Popups */
         #icon-popup, #flag-popup {
@@ -197,6 +253,7 @@
             #sidebar { width: 54px; padding: 6px; gap: 4px; }
             .tool-btn { padding: 8px 4px; font-size: 9px; }
             .tool-btn .icon { font-size: 14px; }
+            #right-sidebar { width: 100px; }
         }
     </style>
 </head>
@@ -270,9 +327,6 @@
             <div id="top-bar">
                 <span style="color:#888;font-size:12px;">세션:</span>
                 <span id="session-name" style="color:#e8e8e8;font-size:12px;">-</span>
-                <span style="color:#888;font-size:12px;">|</span>
-                <span style="color:#888;font-size:12px;">내 색상:</span>
-                <span id="user-color" style="width:16px;height:16px;display:inline-block;border-radius:50%;vertical-align:middle;"></span>
             </div>
             
             <div id="canvas-wrapper">
@@ -295,6 +349,14 @@
                         <span>➕:</span><span id="draw-count">0</span>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Right Sidebar - Online Users -->
+        <div id="right-sidebar">
+            <div class="right-title">🟢 온라인 사용자</div>
+            <div id="online-users">
+                <div class="no-users" id="no-users">없음</div>
             </div>
         </div>
     </div>
@@ -320,6 +382,7 @@
         const SUPABASE_URL = config.supabaseUrl || '';
         const SUPABASE_KEY = config.supabaseKey || '';
         const SESSION_ID = config.sessionId || 0;
+        const USER_ID = config.userId || 0;
         const USER_NICKNAME = config.userNickname || 'User';
         const USER_COLOR = config.userColor || '#e94560';
         
@@ -331,9 +394,6 @@
             selection: true,
             preserveObjectStacking: true
         });
-        
-        // Set user color display
-        document.getElementById('user-color').style.backgroundColor = USER_COLOR;
         
         // Responsive canvas
         function resizeCanvas() {
@@ -401,11 +461,9 @@
         // Canvas events
         canvas.on('mouse:down', function(opt) {
             if (currentTool === 'select') return;
-            
             const pointer = canvas.getPointer(opt.e);
             startPoint = { x: pointer.x, y: pointer.y };
             isDrawing = true;
-            
             if (currentTool === 'icon') { showIconPopup(pointer.x, pointer.y); isDrawing = false; }
             else if (currentTool === 'flag') { showFlagPopup(pointer.x, pointer.y); isDrawing = false; }
             else if (currentTool === 'text') { addText(pointer.x, pointer.y); isDrawing = false; }
@@ -414,53 +472,35 @@
         canvas.on('mouse:move', function(opt) {
             const pointer = canvas.getPointer(opt.e);
             document.getElementById('mouse-pos').textContent = `${Math.round(pointer.x)}, ${Math.round(pointer.y)}`;
-            
             if (!isDrawing || !startPoint) return;
             if (tempObject) canvas.remove(tempObject);
-            
             if (currentTool === 'arrow') tempObject = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, true);
             else if (currentTool === 'line') tempObject = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: false });
             else if (currentTool === 'rect') tempObject = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3 });
             else if (currentTool === 'circle') { const r = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)); tempObject = new fabric.Circle({ left: startPoint.x - r, top: startPoint.y - r, radius: r, fill: 'transparent', stroke: strokeColor, strokeWidth: 3 }); }
-            
             if (tempObject) canvas.add(tempObject);
         });
         
         canvas.on('mouse:up', function(opt) {
             const drawingTools = ['arrow', 'line', 'rect', 'circle'];
             if (!isDrawing || !startPoint || !drawingTools.includes(currentTool)) { isDrawing = false; startPoint = null; return; }
-            
             const pointer = canvas.getPointer(opt.e);
             if (tempObject) canvas.remove(tempObject);
-            
             if (currentTool === 'arrow') { const a = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, false); canvas.add(a); saveDrawing(a); }
             else if (currentTool === 'line') { const l = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(l); saveDrawing(l); }
             else if (currentTool === 'rect') { const r = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(r); saveDrawing(r); }
-            else if (currentTool === 'circle') { const c = new fabric.Circle({ left: startPoint.x - Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), top: startPoint.y - Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), radius: Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(c); saveDrawing(c); }
-            
+            else if (currentTool === 'circle') { const r = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)); const c = new fabric.Circle({ left: startPoint.x - r, top: startPoint.y - r, radius: r, fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(c); saveDrawing(c); }
             isDrawing = false; startPoint = null; tempObject = null;
             canvas.renderAll();
         });
         
-        // FIXED: Object modification - sync position to Supabase when dragged
+        // Object modification - sync position
         canvas.on('object:modified', function(opt) {
             const obj = opt.target;
             if (!obj) return;
-            
             if (obj.iconType === 'user') syncIconPosition(obj);
             else if (obj.iconType === 'flag') syncFlagPosition(obj);
             else if (obj.drawingId) syncDrawingPosition(obj);
-        });
-        
-        // Also sync during drag
-        canvas.on('object:moving', function(opt) {
-            const obj = opt.target;
-            if (!obj) return;
-            
-            // Just log for debugging
-            if (obj.iconType === 'user' || obj.iconType === 'flag') {
-                console.log('Moving:', obj.iconType, 'to', Math.round(obj.left), Math.round(obj.top));
-            }
         });
         
         function createArrow(x1, y1, x2, y2, color, isPreview) {
@@ -561,7 +601,7 @@
             updateCounts();
         }
         
-        // Supabase - Fixed coordinate sync
+        // Supabase functions
         async function saveIconToDB(x, y, name, color) {
             if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
             try {
@@ -580,7 +620,6 @@
         
         async function syncIconPosition(obj) {
             if (!obj || !obj.userId || !SUPABASE_URL || !SUPABASE_KEY) return;
-            console.log('Syncing icon position:', obj.userId, obj.left, obj.top);
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${obj.userId}`, {
                     method: 'PATCH',
@@ -593,10 +632,7 @@
         async function deleteIconFromDB(obj) {
             if (!obj || !obj.userId) return;
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${obj.userId}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${obj.userId}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
             } catch (e) { console.error('deleteIconFromDB error:', e); }
         }
         
@@ -618,7 +654,6 @@
         
         async function syncFlagPosition(obj) {
             if (!obj || !obj.flagId || !SUPABASE_URL || !SUPABASE_KEY) return;
-            console.log('Syncing flag position:', obj.flagId, obj.left, obj.top);
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${obj.flagId}`, {
                     method: 'PATCH',
@@ -631,10 +666,7 @@
         async function deleteFlagFromDB(obj) {
             if (!obj || !obj.flagId) return;
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${obj.flagId}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${obj.flagId}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
             } catch (e) { console.error('deleteFlagFromDB error:', e); }
         }
         
@@ -683,14 +715,66 @@
         async function deleteDrawingFromDB(obj) {
             if (!obj || !obj.drawingId) return;
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/drawings?id=eq.${obj.drawingId}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                await fetch(`${SUPABASE_URL}/rest/v1/drawings?id=eq.${obj.drawingId}`, { method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
             } catch (e) { console.error('deleteDrawingFromDB error:', e); }
         }
         
-        // Load data
+        // Presence - Online users
+        async function updatePresence() {
+            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID || !USER_ID) return;
+            try {
+                // Delete old presence first
+                await fetch(`${SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${USER_ID}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                // Insert new presence
+                await fetch(`${SUPABASE_URL}/rest/v1/user_presence`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                    body: JSON.stringify({
+                        session_id: SESSION_ID,
+                        user_id: USER_ID,
+                        nickname: USER_NICKNAME,
+                        user_color: USER_COLOR
+                    })
+                });
+            } catch (e) { console.error('updatePresence error:', e); }
+        }
+        
+        async function loadOnlineUsers() {
+            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/user_presence?session_id=eq.${SESSION_ID}`, {
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+                const users = await res.json();
+                
+                const container = document.getElementById('online-users');
+                const noUsers = document.getElementById('no-users');
+                
+                // Clear existing (except no-users)
+                Array.from(container.children).forEach(c => { if (c.id !== 'no-users') container.removeChild(c); });
+                
+                if (users.length === 0) {
+                    noUsers.style.display = 'block';
+                } else {
+                    noUsers.style.display = 'none';
+                    users.forEach(u => {
+                        const div = document.createElement('div');
+                        div.className = 'online-user';
+                        div.innerHTML = `
+                            <div class="online-user-dot"></div>
+                            <div class="online-user-color" style="background:${u.user_color}"></div>
+                            <div class="online-user-name">${u.nickname}</div>
+                        `;
+                        container.appendChild(div);
+                    });
+                }
+            } catch (e) { console.error('loadOnlineUsers error:', e); }
+        }
+        
+        // Load session data
         async function loadSessionData() {
             if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
             try {
@@ -718,11 +802,10 @@
             else if (d.type === 'circle') obj = new fabric.Circle({ left: pts[0], top: pts[1], radius: pts[2], fill: 'transparent', stroke: d.color, strokeWidth: d.stroke_width });
             else if (d.type === 'i-text') obj = new fabric.IText(d.text || '텍스트', { left: pts[0], top: pts[1], fill: d.color, fontSize: 16 });
             else if (d.type === 'group') { obj = createArrow(pts[0], pts[1], pts[2], pts[3], d.color, false); }
-            
             if (obj) { obj.drawingId = d.id; canvas.add(obj); }
         }
         
-        // Realtime
+        // Realtime setup
         function setupRealtime() {
             if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) {
                 document.getElementById('sync-status').classList.remove('online');
@@ -733,8 +816,29 @@
             document.getElementById('sync-status').classList.add('online');
             document.getElementById('sync-status').classList.remove('offline');
             document.getElementById('sync-text').textContent = '연결됨';
-            setInterval(loadSessionData, 5000);
+            
+            // Update presence every 10 seconds
+            updatePresence();
+            setInterval(updatePresence, 10000);
+            
+            // Load online users every 5 seconds
+            loadOnlineUsers();
+            setInterval(loadOnlineUsers, 5000);
+            
+            // Load session data every 10 seconds
+            setInterval(loadSessionData, 10000);
         }
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', async () => {
+            if (!SUPABASE_URL || !SUPABASE_KEY || !USER_ID) return;
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/user_presence?user_id=eq.${USER_ID}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+                });
+            } catch (e) { console.error('cleanup error:', e); }
+        });
         
         // Init
         setTimeout(() => { resizeCanvas(); loadSessionData(); setupRealtime(); }, 300);

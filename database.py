@@ -12,6 +12,12 @@ TABLE_WAR_MAP_SESSIONS = "war_map_sessions"
 TABLE_USER_ICONS = "user_icons"
 TABLE_FLAGS = "flags"
 TABLE_DRAWINGS = "drawings"
+TABLE_USER_PRESENCE = "user_presence"
+TABLE_ADMIN_USERS = "admin_users"
+TABLE_WAR_MAP_SESSIONS = "war_map_sessions"
+TABLE_USER_ICONS = "user_icons"
+TABLE_FLAGS = "flags"
+TABLE_DRAWINGS = "drawings"
 
 
 def get_client():
@@ -280,6 +286,55 @@ def create_drawing(
 
 
 def delete_drawing(drawing_id: int):
+    """Delete drawing"""
+    client = get_client()
+    client.table(TABLE_DRAWINGS).delete().eq("id", drawing_id).execute()
+
+
+# ==================== User Presence ====================
+
+
+def update_user_presence(session_id: int, user_id: int, nickname: str, user_color: str):
+    """Update user presence in a session"""
+    client = get_client()
+    # First try to update existing
+    response = (
+        client.table(TABLE_USER_PRESENCE)
+        .update({
+            "nickname": nickname,
+            "user_color": user_color,
+            "last_seen": datetime.now().isoformat()
+        })
+        .eq("session_id", session_id)
+        .eq("user_id", user_id)
+        .execute()
+    )
+    # If no existing, insert new
+    if not response.data:
+        client.table(TABLE_USER_PRESENCE).insert({
+            "session_id": session_id,
+            "user_id": user_id,
+            "nickname": nickname,
+            "user_color": user_color
+        }).execute()
+
+
+def get_online_users(session_id: int):
+    """Get all online users in a session"""
+    client = get_client()
+    response = (
+        client.table(TABLE_USER_PRESENCE)
+        .select("*")
+        .eq("session_id", session_id)
+        .execute()
+    )
+    return response.data
+
+
+def remove_user_presence(session_id: int, user_id: int):
+    """Remove user presence"""
+    client = get_client()
+    client.table(TABLE_USER_PRESENCE).delete().eq("session_id", session_id).eq("user_id", user_id).execute()
     """Delete drawing"""
     client = get_client()
     client.table(TABLE_DRAWINGS).delete().eq("id", drawing_id).execute()

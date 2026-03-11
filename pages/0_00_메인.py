@@ -145,6 +145,15 @@ def main():
             supabase_url=st.session_state.get("supabase_url", ""),
             supabase_key=st.session_state.get("supabase_key", ""),
             session_id=st.session_state.current_session_id,
+            user_id=st.session_state.get("user_id", 0),
+            user_nickname=st.session_state.get("nickname", "User"),
+            user_color=st.session_state.get("user_color", "#e94560"),
+            key=f"canvas_{st.session_state.current_session_id}",
+        )
+        war_map_canvas(
+            supabase_url=st.session_state.get("supabase_url", ""),
+            supabase_key=st.session_state.get("supabase_key", ""),
+            session_id=st.session_state.current_session_id,
             user_nickname=st.session_state.get("nickname", "User"),
             user_color=st.session_state.get("user_color", "#e94560"),
             key=f"canvas_{st.session_state.current_session_id}",

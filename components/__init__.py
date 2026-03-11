@@ -12,6 +12,7 @@ def war_map_canvas(
     session_id: int,
     user_nickname: str,
     user_color: str,
+    user_id: int = 0,
     key: str = "war_map_canvas",
 ):
     """
@@ -23,6 +24,7 @@ def war_map_canvas(
         session_id: Current session ID
         user_nickname: Current user's nickname
         user_color: Current user's assigned color
+        user_id: Current user's ID
         key: Streamlit component key
 
     Returns:
@@ -43,6 +45,7 @@ def war_map_canvas(
             supabaseUrl: '{supabase_url}',
             supabaseKey: '{supabase_key}',
             sessionId: {session_id},
+            userId: {user_id},
             userNickname: '{user_nickname}',
             userColor: '{user_color}'
         }};
@@ -53,9 +56,4 @@ def war_map_canvas(
     html_content = html_content.replace("</head>", f"{config_script}</head>")
 
     # Render component - use dynamic height
-    components.html(
-        html_content, 
-        height=800,
-        scrolling=True
-    )
-    components.html(html_content, height=700, scrolling=True)
+    components.html(html_content, height=800, scrolling=True)

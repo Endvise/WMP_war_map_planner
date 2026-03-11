@@ -11,60 +11,98 @@
             font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             background: #1a1a2e;
             overflow: hidden;
-        }
-        #canvas-container {
-            width: 100vw;
             height: 100vh;
+        }
+        #app-container {
             display: flex;
-            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
         }
         
-        /* Toolbar - horizontal scroll on mobile */
-        #toolbar {
-            min-height: 50px;
-            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+        /* Left Sidebar - Tools */
+        #sidebar {
+            width: 70px;
+            background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
+            border-right: 1px solid #0f3460;
             display: flex;
-            align-items: center;
-            padding: 8px 16px;
+            flex-direction: column;
+            padding: 8px;
             gap: 6px;
-            border-bottom: 1px solid #0f3460;
-            overflow-x: auto;
+            overflow-y: auto;
             flex-shrink: 0;
         }
-        #toolbar::-webkit-scrollbar {
-            height: 4px;
-        }
-        #toolbar::-webkit-scrollbar-thumb {
-            background: #0f3460;
-            border-radius: 2px;
+        
+        .sidebar-title {
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #0f3460;
         }
         
         .tool-btn {
-            padding: 6px 10px;
+            padding: 10px 6px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             background: #0f3460;
             color: #e8e8e8;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             transition: all 0.2s;
             display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 4px;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
+        .tool-btn .icon { font-size: 18px; }
         .tool-btn:hover { background: #1a4a7a; }
         .tool-btn.active { background: #e94560; color: white; }
         
+        .color-section {
+            margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid #0f3460;
+        }
+        .color-label { font-size: 9px; color: #888; text-align: center; margin-bottom: 4px; }
         .color-picker {
-            width: 28px;
+            width: 100%;
             height: 28px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             background: transparent;
+            margin-bottom: 4px;
+        }
+        
+        #image-upload { display: none; }
+        
+        /* Main Canvas Area */
+        #main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        
+        /* Top bar with session info */
+        #top-bar {
+            height: 36px;
+            background: #16213e;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 12px;
+            border-bottom: 1px solid #0f3460;
             flex-shrink: 0;
+        }
+        #top-bar input {
+            background: #0a0a14;
+            border: 1px solid #0f3460;
+            color: #e8e8e8;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
         }
         
         #canvas-wrapper {
@@ -73,9 +111,7 @@
             overflow: hidden;
             min-height: 0;
         }
-        #main-canvas {
-            background: #0a0a14;
-        }
+        #main-canvas { background: #0a0a14; }
         
         .status-bar {
             position: absolute;
@@ -98,66 +134,41 @@
         .online { background: #00ff88; }
         .offline { background: #ff4444; }
         
-        #image-upload { display: none; }
-        
-        #icon-popup {
+        /* Popups */
+        #icon-popup, #flag-popup {
             display: none;
             position: absolute;
             background: #16213e;
             border: 1px solid #0f3460;
             border-radius: 8px;
-            padding: 8px;
+            padding: 10px;
             z-index: 1000;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        #icon-popup input {
+        #icon-popup input, #flag-popup textarea {
             background: #0a0a14;
             border: 1px solid #0f3460;
             color: #e8e8e8;
-            padding: 6px 10px;
+            padding: 6px 8px;
             border-radius: 4px;
-            width: 120px;
+            font-size: 12px;
+            display: block;
+            margin-bottom: 6px;
         }
-        #icon-popup button {
+        #flag-popup textarea { width: 140px; height: 50px; resize: none; }
+        #icon-popup input { width: 100px; }
+        #icon-popup button, #flag-popup button {
             background: #e94560;
             border: none;
             color: white;
-            padding: 6px 10px;
+            padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 4px;
+            font-size: 11px;
+            width: 100%;
         }
         
-        #flag-popup {
-            display: none;
-            position: absolute;
-            background: #16213e;
-            border: 1px solid #0f3460;
-            border-radius: 8px;
-            padding: 8px;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-        }
-        #flag-popup textarea {
-            background: #0a0a14;
-            border: 1px solid #0f3460;
-            color: #e8e8e8;
-            padding: 6px 10px;
-            border-radius: 4px;
-            width: 160px;
-            height: 60px;
-            resize: none;
-        }
-        #flag-popup button {
-            background: #e94560;
-            border: none;
-            color: white;
-            padding: 6px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 4px;
-        }
-        
+        /* Context menu */
         #context-menu {
             display: none;
             position: absolute;
@@ -171,57 +182,124 @@
         #context-menu button {
             display: block;
             width: 100%;
-            padding: 8px 14px;
+            padding: 8px 12px;
             border: none;
             background: transparent;
             color: #e8e8e8;
             text-align: left;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
         }
         #context-menu button:hover { background: #0f3460; }
         #context-menu button.delete { color: #ff4444; }
+        
+        @media (max-width: 600px) {
+            #sidebar { width: 54px; padding: 6px; gap: 4px; }
+            .tool-btn { padding: 8px 4px; font-size: 9px; }
+            .tool-btn .icon { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
-    <div id="canvas-container">
-        <div id="toolbar">
-            <button class="tool-btn active" data-tool="select">👆 선택</button>
-            <button class="tool-btn" data-tool="icon">👤 유저</button>
-            <button class="tool-btn" data-tool="flag">🚩 플래그</button>
-            <button class="tool-btn" data-tool="arrow">➡️</button>
-            <button class="tool-btn" data-tool="line">📏</button>
-            <button class="tool-btn" data-tool="rect">⬜</button>
-            <button class="tool-btn" data-tool="circle">⭕</button>
-            <button class="tool-btn" data-tool="text">📝</button>
-            <label class="tool-btn" for="image-upload">🖼️</label>
+    <div id="app-container">
+        <!-- Left Sidebar - Tools -->
+        <div id="sidebar">
+            <div class="sidebar-title">도구</div>
+            
+            <button class="tool-btn active" data-tool="select">
+                <span class="icon">👆</span>
+                <span>선택</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="icon">
+                <span class="icon">👤</span>
+                <span>유저</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="flag">
+                <span class="icon">🚩</span>
+                <span>플래그</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="arrow">
+                <span class="icon">➡️</span>
+                <span>화살표</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="line">
+                <span class="icon">📏</span>
+                <span>선</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="rect">
+                <span class="icon">⬜</span>
+                <span>사각형</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="circle">
+                <span class="icon">⭕</span>
+                <span>원</span>
+            </button>
+            
+            <button class="tool-btn" data-tool="text">
+                <span class="icon">📝</span>
+                <span>텍스트</span>
+            </button>
+            
+            <label class="tool-btn" for="image-upload">
+                <span class="icon">🖼️</span>
+                <span>맵이미지</span>
+            </label>
             <input type="file" id="image-upload" accept="image/*">
-            <input type="color" class="color-picker" id="stroke-color" value="#e94560" title="선 색상">
-            <input type="color" class="color-picker" id="fill-color" value="#e94560" title="채우기">
-            <button class="tool-btn" id="clear-canvas">🗑️</button>
+            
+            <button class="tool-btn" id="clear-btn">
+                <span class="icon">🗑️</span>
+                <span>초기화</span>
+            </button>
+            
+            <div class="color-section">
+                <div class="color-label">선 색상</div>
+                <input type="color" class="color-picker" id="stroke-color" value="#e94560">
+                <div class="color-label" style="margin-top:6px">채우기</div>
+                <input type="color" class="color-picker" id="fill-color" value="#e94560">
+            </div>
         </div>
-        <div id="canvas-wrapper">
-            <canvas id="main-canvas"></canvas>
-            <div class="status-bar">
-                <div class="status-item">
-                    <span class="status-dot offline" id="sync-status"></span>
-                    <span id="sync-text">연결 안됨</span>
-                </div>
-                <div class="status-item">
-                    <span id="mouse-pos">0, 0</span>
-                </div>
-                <div class="status-item">
-                    <span>👤:</span>
-                    <span id="icon-count">0</span>
-                </div>
-                <div class="status-item">
-                    <span>🚩:</span>
-                    <span id="flag-count">0</span>
+        
+        <!-- Main Area -->
+        <div id="main-area">
+            <div id="top-bar">
+                <span style="color:#888;font-size:12px;">세션:</span>
+                <span id="session-name" style="color:#e8e8e8;font-size:12px;">-</span>
+                <span style="color:#888;font-size:12px;">|</span>
+                <span style="color:#888;font-size:12px;">내 색상:</span>
+                <span id="user-color" style="width:16px;height:16px;display:inline-block;border-radius:50%;vertical-align:middle;"></span>
+            </div>
+            
+            <div id="canvas-wrapper">
+                <canvas id="main-canvas"></canvas>
+                <div class="status-bar">
+                    <div class="status-item">
+                        <span class="status-dot offline" id="sync-status"></span>
+                        <span id="sync-text">연결 안됨</span>
+                    </div>
+                    <div class="status-item">
+                        <span id="mouse-pos">0, 0</span>
+                    </div>
+                    <div class="status-item">
+                        <span>👤:</span><span id="icon-count">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span>🚩:</span><span id="flag-count">0</span>
+                    </div>
+                    <div class="status-item">
+                        <span>➕:</span><span id="draw-count">0</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
+    <!-- Popups -->
     <div id="icon-popup">
         <input type="text" id="icon-name" placeholder="유저 이름">
         <button id="icon-confirm">추가</button>
@@ -237,7 +315,7 @@
     </div>
 
     <script>
-        // Configuration from Streamlit
+        // Configuration
         const config = window.streamlitConfig || {};
         const SUPABASE_URL = config.supabaseUrl || '';
         const SUPABASE_KEY = config.supabaseKey || '';
@@ -245,61 +323,36 @@
         const USER_NICKNAME = config.userNickname || 'User';
         const USER_COLOR = config.userColor || '#e94560';
         
-        console.log('Canvas config:', { SUPABASE_URL: SUPABASE_URL ? 'set' : 'missing', SESSION_ID });
+        console.log('Canvas config:', { SESSION_ID, hasUrl: !!SUPABASE_URL, hasKey: !!SUPABASE_KEY });
         
-        // Initialize Fabric canvas
+        // Initialize canvas
         const canvas = new fabric.Canvas('main-canvas', {
             backgroundColor: '#0a0a14',
             selection: true,
             preserveObjectStacking: true
         });
         
-        // Responsive canvas sizing
+        // Set user color display
+        document.getElementById('user-color').style.backgroundColor = USER_COLOR;
+        
+        // Responsive canvas
         function resizeCanvas() {
             const wrapper = document.getElementById('canvas-wrapper');
-            const toolbar = document.getElementById('toolbar');
-            const statusBar = document.querySelector('.status-bar');
-            
             const width = wrapper.clientWidth;
-            const height = wrapper.clientHeight - (statusBar ? statusBar.offsetHeight : 24);
-            
-            // Desktop: larger canvas
-            // Mobile: use full available space
-            canvas.setDimensions({
-                width: Math.max(width, 800),
-                height: Math.max(height, 400)
-            });
-            
-            // Enable panning for larger canvas
-            canvas.setDimensions({
-                width: Math.max(width, window.innerWidth),
-                height: Math.max(height, window.innerHeight - toolbar.offsetHeight - 24)
-            }, { backstore: false });
-            
+            const height = wrapper.clientHeight - 24;
+            canvas.setDimensions({ width: Math.max(width, 600), height: Math.max(height, 400) });
             canvas.renderAll();
         }
-        
-        // Initial resize
         setTimeout(resizeCanvas, 100);
         window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('load', resizeCanvas);
         
         // Tool state
         let currentTool = 'select';
         let isDrawing = false;
         let startPoint = null;
         let tempObject = null;
-        
-        // Color state
         let strokeColor = '#e94560';
         let fillColor = '#e94560';
-        
-        document.getElementById('stroke-color').addEventListener('change', (e) => {
-            strokeColor = e.target.value;
-        });
-        document.getElementById('fill-color').addEventListener('change', (e) => {
-            fillColor = e.target.value;
-        });
         
         // Tool buttons
         document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
@@ -313,28 +366,20 @@
             });
         });
         
-        // Handle image upload
+        // Color pickers
+        document.getElementById('stroke-color').addEventListener('change', e => strokeColor = e.target.value);
+        document.getElementById('fill-color').addEventListener('change', e => fillColor = e.target.value);
+        
+        // Image upload
         document.getElementById('image-upload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(f) {
                 fabric.Image.fromURL(f.target.result, function(img) {
-                    const maxWidth = canvas.width * 0.9;
-                    const maxHeight = canvas.height * 0.9;
-                    
-                    if (img.width > maxWidth || img.height > maxHeight) {
-                        const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
-                        img.scale(scale);
-                    }
-                    
-                    img.set({
-                        left: (canvas.width - img.width * img.scaleX) / 2,
-                        top: (canvas.height - img.height * img.scaleY) / 2,
-                        selectable: true
-                    });
-                    
+                    const maxW = canvas.width * 0.85, maxH = canvas.height * 0.85;
+                    if (img.width > maxW || img.height > maxH) img.scale(Math.min(maxW / img.width, maxH / img.height));
+                    img.set({ left: (canvas.width - img.width * img.scaleX) / 2, top: (canvas.height - img.height * img.scaleY) / 2, selectable: true });
                     canvas.add(img);
                     canvas.renderAll();
                 });
@@ -343,209 +388,168 @@
             this.value = '';
         });
         
-        // Canvas mouse events
-        canvas.on('mouse:down', function(options) {
-            if (currentTool === 'select') return;
-            
-            const pointer = canvas.getPointer(options.e);
-            startPoint = { x: pointer.x, y: pointer.y };
-            isDrawing = true;
-            
-            if (currentTool === 'icon') {
-                showIconPopup(pointer.x, pointer.y);
-                isDrawing = false;
-            } else if (currentTool === 'flag') {
-                showFlagPopup(pointer.x, pointer.y);
-                isDrawing = false;
-            } else if (currentTool === 'text') {
-                addText(pointer.x, pointer.y);
-                isDrawing = false;
+        // Clear button
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            if (confirm('모든 요소를 삭제하시겠습니까?')) {
+                canvas.clear();
+                canvas.backgroundColor = '#0a0a14';
+                updateCounts();
+                canvas.renderAll();
             }
         });
         
-        canvas.on('mouse:move', function(options) {
-            const pointer = canvas.getPointer(options.e);
+        // Canvas events
+        canvas.on('mouse:down', function(opt) {
+            if (currentTool === 'select') return;
+            
+            const pointer = canvas.getPointer(opt.e);
+            startPoint = { x: pointer.x, y: pointer.y };
+            isDrawing = true;
+            
+            if (currentTool === 'icon') { showIconPopup(pointer.x, pointer.y); isDrawing = false; }
+            else if (currentTool === 'flag') { showFlagPopup(pointer.x, pointer.y); isDrawing = false; }
+            else if (currentTool === 'text') { addText(pointer.x, pointer.y); isDrawing = false; }
+        });
+        
+        canvas.on('mouse:move', function(opt) {
+            const pointer = canvas.getPointer(opt.e);
             document.getElementById('mouse-pos').textContent = `${Math.round(pointer.x)}, ${Math.round(pointer.y)}`;
             
             if (!isDrawing || !startPoint) return;
-            
             if (tempObject) canvas.remove(tempObject);
             
-            if (currentTool === 'arrow') {
-                tempObject = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, true);
-            } else if (currentTool === 'line') {
-                tempObject = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: false });
-            } else if (currentTool === 'rect') {
-                tempObject = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3 });
-            } else if (currentTool === 'circle') {
-                const radius = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2));
-                tempObject = new fabric.Circle({ left: startPoint.x - radius, top: startPoint.y - radius, radius: radius, fill: 'transparent', stroke: strokeColor, strokeWidth: 3 });
-            }
+            if (currentTool === 'arrow') tempObject = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, true);
+            else if (currentTool === 'line') tempObject = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: false });
+            else if (currentTool === 'rect') tempObject = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3 });
+            else if (currentTool === 'circle') { const r = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)); tempObject = new fabric.Circle({ left: startPoint.x - r, top: startPoint.y - r, radius: r, fill: 'transparent', stroke: strokeColor, strokeWidth: 3 }); }
             
             if (tempObject) canvas.add(tempObject);
         });
         
-        canvas.on('mouse:up', function(options) {
-            if (!isDrawing || !startPoint) return;
+        canvas.on('mouse:up', function(opt) {
+            const drawingTools = ['arrow', 'line', 'rect', 'circle'];
+            if (!isDrawing || !startPoint || !drawingTools.includes(currentTool)) { isDrawing = false; startPoint = null; return; }
             
-            const pointer = canvas.getPointer(options.e);
+            const pointer = canvas.getPointer(opt.e);
             if (tempObject) canvas.remove(tempObject);
             
-            if (currentTool === 'arrow') {
-                const arrow = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, false);
-                canvas.add(arrow);
-                saveDrawing(arrow);
-            } else if (currentTool === 'line') {
-                const line = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: true });
-                canvas.add(line);
-                saveDrawing(line);
-            } else if (currentTool === 'rect') {
-                const rect = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true });
-                canvas.add(rect);
-                saveDrawing(rect);
-            } else if (currentTool === 'circle') {
-                const radius = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2));
-                const circle = new fabric.Circle({ left: startPoint.x - radius, top: startPoint.y - radius, radius: radius, fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true });
-                canvas.add(circle);
-                saveDrawing(circle);
-            }
+            if (currentTool === 'arrow') { const a = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, false); canvas.add(a); saveDrawing(a); }
+            else if (currentTool === 'line') { const l = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], { stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(l); saveDrawing(l); }
+            else if (currentTool === 'rect') { const r = new fabric.Rect({ left: Math.min(startPoint.x, pointer.x), top: Math.min(startPoint.y, pointer.y), width: Math.abs(pointer.x - startPoint.x), height: Math.abs(pointer.y - startPoint.y), fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(r); saveDrawing(r); }
+            else if (currentTool === 'circle') { const c = new fabric.Circle({ left: startPoint.x - Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), top: startPoint.y - Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), radius: Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2)), fill: 'transparent', stroke: strokeColor, strokeWidth: 3, selectable: true }); canvas.add(c); saveDrawing(c); }
             
-            isDrawing = false;
-            startPoint = null;
-            tempObject = null;
+            isDrawing = false; startPoint = null; tempObject = null;
             canvas.renderAll();
+        });
+        
+        // FIXED: Object modification - sync position to Supabase when dragged
+        canvas.on('object:modified', function(opt) {
+            const obj = opt.target;
+            if (!obj) return;
+            
+            if (obj.iconType === 'user') syncIconPosition(obj);
+            else if (obj.iconType === 'flag') syncFlagPosition(obj);
+            else if (obj.drawingId) syncDrawingPosition(obj);
+        });
+        
+        // Also sync during drag
+        canvas.on('object:moving', function(opt) {
+            const obj = opt.target;
+            if (!obj) return;
+            
+            // Just log for debugging
+            if (obj.iconType === 'user' || obj.iconType === 'flag') {
+                console.log('Moving:', obj.iconType, 'to', Math.round(obj.left), Math.round(obj.top));
+            }
         });
         
         function createArrow(x1, y1, x2, y2, color, isPreview) {
             const angle = Math.atan2(y2 - y1, x2 - x1);
-            const headLength = 15;
+            const head = new fabric.Triangle({ left: x2, top: y2, width: 15, height: 15, fill: color, angle: (angle * 180 / Math.PI) + 90, originX: 'center', originY: 'center', selectable: !isPreview });
             const line = new fabric.Line([x1, y1, x2, y2], { stroke: color, strokeWidth: 3, selectable: !isPreview });
-            const head = new fabric.Triangle({ left: x2, top: y2, width: headLength, height: headLength, fill: color, angle: (angle * 180 / Math.PI) + 90, originX: 'center', originY: 'center', selectable: !isPreview });
             return new fabric.Group([line, head], { selectable: !isPreview, evented: !isPreview });
         }
         
         function addText(x, y) {
-            const text = new fabric.IText('텍스트', { left: x, top: y, fill: strokeColor, fontSize: 18, fontFamily: 'sans-serif' });
-            canvas.add(text);
-            canvas.setActiveObject(text);
-            text.enterEditing();
-            saveDrawing(text);
+            const t = new fabric.IText('텍스트', { left: x, top: y, fill: strokeColor, fontSize: 16, fontFamily: 'sans-serif' });
+            canvas.add(t);
+            canvas.setActiveObject(t);
+            t.enterEditing();
+            saveDrawing(t);
         }
         
+        // Popups
         function showIconPopup(x, y) {
-            const popup = document.getElementById('icon-popup');
-            popup.style.display = 'block';
-            popup.style.left = x + 'px';
-            popup.style.top = y + 'px';
+            const p = document.getElementById('icon-popup');
+            p.style.display = 'block';
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
             document.getElementById('icon-name').value = '';
             document.getElementById('icon-name').focus();
-            
             document.getElementById('icon-confirm').onclick = () => {
                 const name = document.getElementById('icon-name').value.trim();
-                if (name) {
-                    addUserIcon(x, y, name, USER_COLOR);
-                    saveIconToDB(x, y, name, USER_COLOR);
-                }
-                popup.style.display = 'none';
+                if (name) { addUserIcon(x, y, name, USER_COLOR); saveIconToDB(x, y, name, USER_COLOR); }
+                p.style.display = 'none';
             };
         }
         
-        function addUserIcon(x, y, name, color) {
-            const circle = new fabric.Circle({ radius: 18, fill: color, originX: 'center', originY: 'center' });
-            const initial = new fabric.Text(name.charAt(0).toUpperCase(), { fontSize: 14, fill: '#fff', originX: 'center', originY: 'center', fontWeight: 'bold' });
-            const label = new fabric.Text(name, { fontSize: 10, fill: '#fff', top: 24, originX: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 3 });
-            
-            const group = new fabric.Group([circle, initial, label], {
-                left: x, top: y,
-                hasControls: false,
-                hasBorders: true,
-                lockScalingX: true, lockScalingY: true,
-                iconType: 'user', userName: name, borderColor: color, userId: null
-            });
-            
-            canvas.add(group);
-            updateIconCount();
-            return group;
-        }
-        
         function showFlagPopup(x, y) {
-            const popup = document.getElementById('flag-popup');
-            popup.style.display = 'block';
-            popup.style.left = x + 'px';
-            popup.style.top = y + 'px';
+            const p = document.getElementById('flag-popup');
+            p.style.display = 'block';
+            p.style.left = x + 'px';
+            p.style.top = y + 'px';
             document.getElementById('flag-memo').value = '';
             document.getElementById('flag-memo').focus();
-            
             document.getElementById('flag-confirm').onclick = () => {
                 const memo = document.getElementById('flag-memo').value.trim();
                 addFlag(x, y, memo);
                 saveFlagToDB(x, y, memo);
-                popup.style.display = 'none';
+                p.style.display = 'none';
             };
         }
         
-        function addFlag(x, y, memo) {
-            const triangle = new fabric.Triangle({ width: 20, height: 20, fill: fillColor, originX: 'center', originY: 'center' });
-            const pole = new fabric.Rect({ width: 3, height: 30, fill: '#888', top: 10, originX: 'center', originY: 'center' });
-            
-            const group = new fabric.Group([triangle, pole], {
-                left: x, top: y,
-                hasControls: false, hasBorders: true,
-                lockScalingX: true, lockScalingY: true,
-                iconType: 'flag', flagMemo: memo, flagId: null
-            });
-            
-            if (memo) {
-                const memoText = new fabric.Text(memo.length > 12 ? memo.substring(0, 12) + '...' : memo, {
-                    fontSize: 10, fill: '#e8e8e8', top: 38, originX: 'center', backgroundColor: 'rgba(0,0,0,0.8)', padding: 3
-                });
-                group.addWithUpdate(memoText);
-            }
-            
+        function addUserIcon(x, y, name, color) {
+            const circle = new fabric.Circle({ radius: 16, fill: color, originX: 'center', originY: 'center' });
+            const initial = new fabric.Text(name.charAt(0).toUpperCase(), { fontSize: 12, fill: '#fff', originX: 'center', originY: 'center', fontWeight: 'bold' });
+            const label = new fabric.Text(name, { fontSize: 9, fill: '#fff', top: 22, originX: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 2 });
+            const group = new fabric.Group([circle, initial, label], { left: x, top: y, hasControls: false, hasBorders: true, lockScalingX: true, lockScalingY: true, iconType: 'user', userName: name, borderColor: color, userId: null });
             canvas.add(group);
-            updateFlagCount();
+            updateCounts();
             return group;
         }
         
-        function updateIconCount() {
-            document.getElementById('icon-count').textContent = canvas.getObjects().filter(o => o.iconType === 'user').length;
+        function addFlag(x, y, memo) {
+            const triangle = new fabric.Triangle({ width: 18, height: 18, fill: fillColor, originX: 'center', originY: 'center' });
+            const pole = new fabric.Rect({ width: 3, height: 25, fill: '#888', top: 9, originX: 'center', originY: 'center' });
+            const group = new fabric.Group([triangle, pole], { left: x, top: y, hasControls: false, hasBorders: true, lockScalingX: true, lockScalingY: true, iconType: 'flag', flagMemo: memo, flagId: null });
+            if (memo) {
+                const m = new fabric.Text(memo.length > 10 ? memo.substring(0,10)+'...' : memo, { fontSize: 9, fill: '#fff', top: 32, originX: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 2 });
+                group.addWithUpdate(m);
+            }
+            canvas.add(group);
+            updateCounts();
+            return group;
         }
         
-        function updateFlagCount() {
+        function updateCounts() {
+            document.getElementById('icon-count').textContent = canvas.getObjects().filter(o => o.iconType === 'user').length;
             document.getElementById('flag-count').textContent = canvas.getObjects().filter(o => o.iconType === 'flag').length;
+            document.getElementById('draw-count').textContent = canvas.getObjects().filter(o => o.drawingId).length;
         }
         
         // Context menu
-        canvas.on('selection:created', function(e) {
-            if (e.selected && e.selected.length === 1 && e.selected[0].iconType) {
-                showContextMenuForObject(e.selected[0]);
-            }
-        });
-        
-        canvas.on('selection:updated', function(e) {
-            if (e.selected && e.selected.length === 1 && e.selected[0].iconType) {
-                showContextMenuForObject(e.selected[0]);
-            }
-        });
-        
+        canvas.on('selection:created', e => { if (e.selected && e.selected.length === 1 && e.selected[0].iconType) showContextMenu(e.selected[0]); });
+        canvas.on('selection:updated', e => { if (e.selected && e.selected.length === 1 && e.selected[0].iconType) showContextMenu(e.selected[0]); });
         canvas.on('selection:cleared', hideContextMenu);
         
-        function showContextMenuForObject(obj) {
-            if (!obj || !obj.iconType) return;
-            const menu = document.getElementById('context-menu');
-            menu.style.display = 'block';
-            menu.style.left = (obj.left + 20) + 'px';
-            menu.style.top = (obj.top + 20) + 'px';
-            
-            document.getElementById('ctx-delete').onclick = () => {
-                deleteObject(obj);
-                hideContextMenu();
-            };
+        function showContextMenu(obj) {
+            const m = document.getElementById('context-menu');
+            m.style.display = 'block';
+            m.style.left = (obj.left + 20) + 'px';
+            m.style.top = (obj.top + 20) + 'px';
+            document.getElementById('ctx-delete').onclick = () => { deleteObject(obj); hideContextMenu(); };
         }
-        
-        function hideContextMenu() {
-            document.getElementById('context-menu').style.display = 'none';
-        }
+        function hideContextMenu() { document.getElementById('context-menu').style.display = 'none'; }
         
         function deleteObject(obj) {
             if (!obj) return;
@@ -554,169 +558,171 @@
             else deleteDrawingFromDB(obj);
             canvas.remove(obj);
             canvas.renderAll();
-            updateIconCount();
-            updateFlagCount();
+            updateCounts();
         }
         
-        document.getElementById('clear-canvas').addEventListener('click', () => {
-            if (confirm('모든 요소를 삭제하시겠습니까?')) {
-                canvas.clear();
-                canvas.backgroundColor = '#0a0a14';
-                canvas.renderAll();
-                updateIconCount();
-                updateFlagCount();
-            }
-        });
-        
-        // Supabase sync - with better error handling
+        // Supabase - Fixed coordinate sync
         async function saveIconToDB(x, y, name, color) {
-            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) {
-                console.warn('Supabase not configured');
-                return;
-            }
+            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_icons`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/user_icons`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
                     body: JSON.stringify({ session_id: SESSION_ID, user_name: name, x: Math.round(x), y: Math.round(y), border_color: color })
                 });
-                if (response.ok) {
-                    const data = await response.json();
+                if (res.ok) {
+                    const data = await res.json();
                     const icons = canvas.getObjects().filter(o => o.iconType === 'user');
                     if (icons.length > 0 && data[0]) icons[icons.length - 1].userId = data[0].id;
                 }
-            } catch (err) { console.error('Error saving icon:', err); }
+            } catch (e) { console.error('saveIconToDB error:', e); }
         }
         
-        async function deleteIconFromDB(iconObj) {
-            if (!iconObj || !iconObj.userId || !SUPABASE_URL || !SUPABASE_KEY) return;
+        async function syncIconPosition(obj) {
+            if (!obj || !obj.userId || !SUPABASE_URL || !SUPABASE_KEY) return;
+            console.log('Syncing icon position:', obj.userId, obj.left, obj.top);
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${iconObj.userId}`, {
+                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${obj.userId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                    body: JSON.stringify({ x: Math.round(obj.left), y: Math.round(obj.top) })
+                });
+            } catch (e) { console.error('syncIconPosition error:', e); }
+        }
+        
+        async function deleteIconFromDB(obj) {
+            if (!obj || !obj.userId) return;
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${obj.userId}`, {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
-            } catch (err) { console.error('Error deleting icon:', err); }
+            } catch (e) { console.error('deleteIconFromDB error:', e); }
         }
         
         async function saveFlagToDB(x, y, memo) {
             if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/flags`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/flags`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
                     body: JSON.stringify({ session_id: SESSION_ID, x: Math.round(x), y: Math.round(y), memo: memo })
                 });
-                if (response.ok) {
-                    const data = await response.json();
+                if (res.ok) {
+                    const data = await res.json();
                     const flags = canvas.getObjects().filter(o => o.iconType === 'flag');
                     if (flags.length > 0 && data[0]) flags[flags.length - 1].flagId = data[0].id;
                 }
-            } catch (err) { console.error('Error saving flag:', err); }
+            } catch (e) { console.error('saveFlagToDB error:', e); }
         }
         
-        async function deleteFlagFromDB(flagObj) {
-            if (!flagObj || !flagObj.flagId || !SUPABASE_URL || !SUPABASE_KEY) return;
+        async function syncFlagPosition(obj) {
+            if (!obj || !obj.flagId || !SUPABASE_URL || !SUPABASE_KEY) return;
+            console.log('Syncing flag position:', obj.flagId, obj.left, obj.top);
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${flagObj.flagId}`, {
+                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${obj.flagId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                    body: JSON.stringify({ x: Math.round(obj.left), y: Math.round(obj.top) })
+                });
+            } catch (e) { console.error('syncFlagPosition error:', e); }
+        }
+        
+        async function deleteFlagFromDB(obj) {
+            if (!obj || !obj.flagId) return;
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${obj.flagId}`, {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
-            } catch (err) { console.error('Error deleting flag:', err); }
+            } catch (e) { console.error('deleteFlagFromDB error:', e); }
         }
         
         async function saveDrawing(obj) {
             if (!SUPABASE_URL || !SUPABASE_KEY || !obj || !SESSION_ID) return;
             const type = obj.type || 'unknown';
             const color = obj.stroke || obj.fill || '#e94560';
-            const strokeWidth = obj.strokeWidth || 3;
+            const sw = obj.strokeWidth || 3;
             let points = [];
-            
             if (type === 'line') points = [obj.x1, obj.y1, obj.x2, obj.y2];
             else if (type === 'rect') points = [obj.left, obj.top, obj.width * obj.scaleX, obj.height * obj.scaleY];
             else if (type === 'circle') points = [obj.left, obj.top, obj.radius];
             else if (type === 'i-text') points = [obj.left, obj.top];
             
             try {
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/drawings`, {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/drawings`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
-                    body: JSON.stringify({ session_id: SESSION_ID, type: type, points: JSON.stringify(points), color: color, stroke_width: strokeWidth })
+                    body: JSON.stringify({ session_id: SESSION_ID, type: type, points: JSON.stringify(points), color: color, stroke_width: sw })
                 });
-                if (response.ok) {
-                    const data = await response.json();
+                if (res.ok) {
+                    const data = await res.json();
                     if (data[0]) obj.drawingId = data[0].id;
                 }
-            } catch (err) { console.error('Error saving drawing:', err); }
+            } catch (e) { console.error('saveDrawing error:', e); }
+        }
+        
+        async function syncDrawingPosition(obj) {
+            if (!obj || !obj.drawingId || !SUPABASE_URL || !SUPABASE_KEY) return;
+            const type = obj.type;
+            let points = [];
+            if (type === 'rect') points = [obj.left, obj.top, obj.width * obj.scaleX, obj.height * obj.scaleY];
+            else if (type === 'circle') points = [obj.left, obj.top, obj.radius];
+            else if (type === 'i-text') points = [obj.left, obj.top];
+            else if (type === 'group') points = [obj.left, obj.top, obj.left + (obj.width||0), obj.top + (obj.height||0)];
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/drawings?id=eq.${obj.drawingId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+                    body: JSON.stringify({ points: JSON.stringify(points) })
+                });
+            } catch (e) { console.error('syncDrawingPosition error:', e); }
         }
         
         async function deleteDrawingFromDB(obj) {
-            if (!obj || !obj.drawingId || !SUPABASE_URL || !SUPABASE_KEY) return;
+            if (!obj || !obj.drawingId) return;
             try {
                 await fetch(`${SUPABASE_URL}/rest/v1/drawings?id=eq.${obj.drawingId}`, {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
                 });
-            } catch (err) { console.error('Error deleting drawing:', err); }
+            } catch (e) { console.error('deleteDrawingFromDB error:', e); }
         }
         
-        // Load session data from Supabase
+        // Load data
         async function loadSessionData() {
-            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) {
-                console.warn('Cannot load session - Supabase not configured or no session');
-                return;
-            }
-            
+            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
             try {
-                // Load icons
-                const iconsRes = await fetch(`${SUPABASE_URL}/rest/v1/user_icons?session_id=eq.${SESSION_ID}`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                const iconsRes = await fetch(`${SUPABASE_URL}/rest/v1/user_icons?session_id=eq.${SESSION_ID}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const icons = await iconsRes.json();
-                icons.forEach(icon => {
-                    addUserIcon(icon.x, icon.y, icon.user_name, icon.border_color);
-                    const canvasIcons = canvas.getObjects().filter(o => o.iconType === 'user');
-                    if (canvasIcons.length > 0) canvasIcons[canvasIcons.length - 1].userId = icon.id;
-                });
+                icons.forEach(i => { addUserIcon(i.x, i.y, i.user_name, i.border_color); const c = canvas.getObjects().filter(o => o.iconType === 'user'); if (c.length > 0) c[c.length-1].userId = i.id; });
                 
-                // Load flags
-                const flagsRes = await fetch(`${SUPABASE_URL}/rest/v1/flags?session_id=eq.${SESSION_ID}`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
+                const flagsRes = await fetch(`${SUPABASE_URL}/rest/v1/flags?session_id=eq.${SESSION_ID}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
                 const flags = await flagsRes.json();
-                flags.forEach(flag => {
-                    addFlag(flag.x, flag.y, flag.memo);
-                    const canvasFlags = canvas.getObjects().filter(o => o.iconType === 'flag');
-                    if (canvasFlags.length > 0) canvasFlags[canvasFlags.length - 1].flagId = flag.id;
-                });
+                flags.forEach(f => { addFlag(f.x, f.y, f.memo); const c = canvas.getObjects().filter(o => o.iconType === 'flag'); if (c.length > 0) c[c.length-1].flagId = f.id; });
                 
-                // Load drawings
-                const drawingsRes = await fetch(`${SUPABASE_URL}/rest/v1/drawings?session_id=eq.${SESSION_ID}`, {
-                    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
-                });
-                const drawings = await drawingsRes.json();
+                const drawRes = await fetch(`${SUPABASE_URL}/rest/v1/drawings?session_id=eq.${SESSION_ID}`, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } });
+                const drawings = await drawRes.json();
                 drawings.forEach(d => loadDrawing(d));
                 
-            } catch (err) {
-                console.error('Error loading session data:', err);
-            }
+                updateCounts();
+            } catch (e) { console.error('loadSessionData error:', e); }
         }
         
         function loadDrawing(d) {
-            const points = JSON.parse(d.points || '[]');
+            const pts = JSON.parse(d.points || '[]');
             let obj = null;
+            if (d.type === 'line') obj = new fabric.Line(pts, { stroke: d.color, strokeWidth: d.stroke_width });
+            else if (d.type === 'rect') obj = new fabric.Rect({ left: pts[0], top: pts[1], width: pts[2], height: pts[3], fill: 'transparent', stroke: d.color, strokeWidth: d.stroke_width });
+            else if (d.type === 'circle') obj = new fabric.Circle({ left: pts[0], top: pts[1], radius: pts[2], fill: 'transparent', stroke: d.color, strokeWidth: d.stroke_width });
+            else if (d.type === 'i-text') obj = new fabric.IText(d.text || '텍스트', { left: pts[0], top: pts[1], fill: d.color, fontSize: 16 });
+            else if (d.type === 'group') { obj = createArrow(pts[0], pts[1], pts[2], pts[3], d.color, false); }
             
-            if (d.type === 'line') obj = new fabric.Line(points, { stroke: d.color, strokeWidth: d.stroke_width });
-            else if (d.type === 'rect') obj = new fabric.Rect({ left: points[0], top: points[1], width: points[2], height: points[3], fill: 'transparent', stroke: d.color, strokeWidth: d.stroke_width });
-            else if (d.type === 'circle') obj = new fabric.Circle({ left: points[0], top: points[1], radius: points[2], fill: 'transparent', stroke: d.color, strokeWidth: d.stroke_width });
-            else if (d.type === 'i-text') obj = new fabric.IText(d.text || '텍스트', { left: points[0], top: points[1], fill: d.color, fontSize: 18 });
-            
-            if (obj) {
-                obj.drawingId = d.id;
-                canvas.add(obj);
-            }
+            if (obj) { obj.drawingId = d.id; canvas.add(obj); }
         }
         
-        // Real-time sync
+        // Realtime
         function setupRealtime() {
             if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) {
                 document.getElementById('sync-status').classList.remove('online');
@@ -724,22 +730,14 @@
                 document.getElementById('sync-text').textContent = '설정 안됨';
                 return;
             }
-            
             document.getElementById('sync-status').classList.add('online');
             document.getElementById('sync-status').classList.remove('offline');
             document.getElementById('sync-text').textContent = '연결됨';
-            
-            // Poll every 5 seconds
             setInterval(loadSessionData, 5000);
         }
         
-        // Initialize
-        setTimeout(() => {
-            resizeCanvas();
-            loadSessionData();
-            setupRealtime();
-        }, 300);
-        
+        // Init
+        setTimeout(() => { resizeCanvas(); loadSessionData(); setupRealtime(); }, 300);
         window.parent.postMessage({ type: 'canvasReady' }, '*');
     </script>
 </body>

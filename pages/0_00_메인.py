@@ -107,7 +107,7 @@ def main():
         st.divider()
 
         # Admin management link (master admin only)
-        if st.session_state.get('is_master_admin'):
+        if st.session_state.get("is_master_admin"):
             if st.button("⚙️ 관리자 설정", key="admin_settings"):
                 st.switch_page("pages/1_01_관리자설정.py")
 
@@ -116,8 +116,6 @@ def main():
             st.switch_page("../login.py")
 
         st.divider()
-
-        # Session list
 
         # Session list
         for s in st.session_state.sessions:
@@ -149,10 +147,6 @@ def main():
             user_nickname=st.session_state.get("nickname", "User"),
             user_color=st.session_state.get("user_color", "#e94560"),
             key=f"canvas_{st.session_state.current_session_id}",
-        )
-            key=f"canvas_{st.session_state.current_session_id}",
-        )
-    else:
         )
     else:
         st.info("왼쪽에서 이벤트를 선택하거나 새로 추가하세요.")

@@ -396,11 +396,18 @@
         });
         
         // Responsive canvas
-        function resizeCanvas() {
-            const wrapper = document.getElementById('canvas-wrapper');
-            const width = wrapper.clientWidth;
-            const height = wrapper.clientHeight - 24;
-            canvas.setDimensions({ width: Math.max(width, 600), height: Math.max(height, 400) });
+            // 16:9 aspect ratio
+            const aspectRatio = 16 / 9;
+            let newWidth = Math.max(width, 800);
+            let newHeight = newWidth / aspectRatio;
+            
+            // If height is too big, adjust based on height
+            if (newHeight > height) {
+                newHeight = Math.max(height, 450);
+                newWidth = newHeight * aspectRatio;
+            }
+            
+            canvas.setDimensions({ width: newWidth, height: newHeight });
             canvas.renderAll();
         }
         setTimeout(resizeCanvas, 100);

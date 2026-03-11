@@ -78,6 +78,12 @@ def delete_admin_user(admin_id: int):
 
 
 def get_admin_by_username(username: str):
+    """Delete admin user"""
+    client = get_client()
+    client.table(TABLE_ADMIN_USERS).delete().eq("id", admin_id).execute()
+
+
+def get_admin_by_username(username: str):
     """Get admin user by username"""
     client = get_client()
     response = (
@@ -86,21 +92,7 @@ def get_admin_by_username(username: str):
     return response.data[0] if response.data else None
 
 
-def create_admin_user(username: str, nickname: str, password_hash: str):
-    """Create admin user"""
-    client = get_client()
-    response = (
-        client.table(TABLE_ADMIN_USERS)
-        .insert(
-            {"username": username, "nickname": nickname, "password_hash": password_hash}
-        )
-        .execute()
-    )
-    return response.data[0] if response.data else None
-
-
 # ==================== War Map Sessions ====================
-
 
 def get_all_sessions():
     """Get all war map sessions"""

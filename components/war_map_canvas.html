@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Map Canvas</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #1a1a2e;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #toolbar {
+            height: 50px;
+            background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 8px;
+            border-bottom: 1px solid #0f3460;
+        }
+        .tool-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #0f3460;
+            color: #e8e8e8;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .tool-btn:hover { background: #1a4a7a; }
+        .tool-btn.active { background: #e94560; color: white; }
+        .color-picker {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            background: transparent;
+        }
+        #canvas-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        #main-canvas {
+            background: #0a0a14;
+        }
+        .status-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 28px;
+            background: rgba(22, 33, 62, 0.95);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 16px;
+            font-size: 12px;
+            color: #a0a0a0;
+            border-top: 1px solid #0f3460;
+        }
+        .status-item { display: flex; align-items: center; gap: 4px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .online { background: #00ff88; }
+        .offline { background: #ff4444; }
+        
+        /* Icon popup styles */
+        #icon-popup {
+            display: none;
+            position: absolute;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #icon-popup input {
+            background: #0a0a14;
+            border: 1px solid #0f3460;
+            color: #e8e8e8;
+            padding: 6px 10px;
+            border-radius: 4px;
+            width: 150px;
+        }
+        #icon-popup button {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 4px;
+        }
+        
+        /* Flag popup styles */
+        #flag-popup {
+            display: none;
+            position: absolute;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #flag-popup textarea {
+            background: #0a0a14;
+            border: 1px solid #0f3460;
+            color: #e8e8e8;
+            padding: 6px 10px;
+            border-radius: 4px;
+            width: 200px;
+            height: 80px;
+            resize: none;
+        }
+        #flag-popup button {
+            background: #e94560;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        
+        /* Context menu */
+        #context-menu {
+            display: none;
+            position: absolute;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            padding: 4px 0;
+            z-index: 1001;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #context-menu button {
+            display: block;
+            width: 100%;
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: #e8e8e8;
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        #context-menu button:hover { background: #0f3460; }
+        #context-menu button.delete { color: #ff4444; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="toolbar">
+            <button class="tool-btn active" data-tool="select">👆 선택</button>
+            <button class="tool-btn" data-tool="icon">👤 유저 아이콘</button>
+            <button class="tool-btn" data-tool="flag">🚩 플래그</button>
+            <button class="tool-btn" data-tool="arrow">➡️ 화살표</button>
+            <button class="tool-btn" data-tool="line">📏 선</button>
+            <button class="tool-btn" data-tool="rect">⬜ 사각형</button>
+            <button class="tool-btn" data-tool="circle">⭕ 원</button>
+            <button class="tool-btn" data-tool="text">📝 텍스트</button>
+            <div style="flex:1"></div>
+            <input type="color" class="color-picker" id="stroke-color" value="#e94560">
+            <input type="color" class="color-picker" id="fill-color" value="#e94560">
+            <button class="tool-btn" id="clear-canvas">🗑️Clear</button>
+            <button class="tool-btn" id="save-drawing">💾 저장</button>
+        </div>
+        <div id="canvas-wrapper">
+            <canvas id="main-canvas"></canvas>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="status-dot offline" id="sync-status"></span>
+                    <span id="sync-text">연결 안됨</span>
+                </div>
+                <div class="status-item">
+                    <span>마우스:</span>
+                    <span id="mouse-pos">0, 0</span>
+                </div>
+                <div class="status-item">
+                    <span>아이콘:</span>
+                    <span id="icon-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span>플래그:</span>
+                    <span id="flag-count">0</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Icon popup -->
+    <div id="icon-popup">
+        <input type="text" id="icon-name" placeholder="유저 이름 입력...">
+        <button id="icon-confirm">추가</button>
+    </div>
+    
+    <!-- Flag popup -->
+    <div id="flag-popup">
+        <textarea id="flag-memo" placeholder="메모 입력..."></textarea>
+        <button id="flag-confirm">저장</button>
+    </div>
+    
+    <!-- Context menu -->
+    <div id="context-menu">
+        <button id="ctx-edit">✏️ 수정</button>
+        <button id="ctx-delete" class="delete">🗑️ 삭제</button>
+    </div>
+
+    <script>
+        // Configuration from Streamlit
+        const config = window.streamlitConfig || {};
+        const SUPABASE_URL = config.supabaseUrl || '';
+        const SUPABASE_KEY = config.supabaseKey || '';
+        const SESSION_ID = config.sessionId || 0;
+        const USER_NICKNAME = config.userNickname || 'User';
+        const USER_COLOR = config.userColor || '#e94560';
+        
+        // Initialize Fabric canvas
+        const canvas = new fabric.Canvas('main-canvas', {
+            backgroundColor: '#0a0a14',
+            selection: true,
+            preserveObjectStacking: true
+        });
+        
+        // Resize canvas to fit window
+        function resizeCanvas() {
+            const wrapper = document.getElementById('canvas-wrapper');
+            canvas.setDimensions({
+                width: wrapper.clientWidth,
+                height: wrapper.clientHeight - 28 // status bar height
+            });
+            canvas.renderAll();
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+        
+        // Tool state
+        let currentTool = 'select';
+        let isDrawing = false;
+        let startPoint = null;
+        let tempObject = null;
+        
+        // Color state
+        let strokeColor = '#e94560';
+        let fillColor = '#e94560';
+        
+        document.getElementById('stroke-color').addEventListener('change', (e) => {
+            strokeColor = e.target.value;
+        });
+        document.getElementById('fill-color').addEventListener('change', (e) => {
+            fillColor = e.target.value;
+        });
+        
+        // Tool buttons
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTool = btn.dataset.tool;
+                canvas.isDrawingMode = false;
+                canvas.selection = currentTool === 'select';
+                
+                // Update cursor
+                if (currentTool === 'select') {
+                    canvas.defaultCursor = 'default';
+                } else {
+                    canvas.defaultCursor = 'crosshair';
+                }
+            });
+        });
+        
+        // Canvas mouse events
+        canvas.on('mouse:down', function(options) {
+            if (currentTool === 'select') return;
+            
+            const pointer = canvas.getPointer(options.e);
+            startPoint = { x: pointer.x, y: pointer.y };
+            isDrawing = true;
+            
+            if (currentTool === 'icon') {
+                showIconPopup(pointer.x, pointer.y);
+                isDrawing = false;
+            } else if (currentTool === 'flag') {
+                showFlagPopup(pointer.x, pointer.y);
+                isDrawing = false;
+            } else if (currentTool === 'text') {
+                addText(pointer.x, pointer.y);
+                isDrawing = false;
+            }
+        });
+        
+        canvas.on('mouse:move', function(options) {
+            const pointer = canvas.getPointer(options.e);
+            document.getElementById('mouse-pos').textContent = `${Math.round(pointer.x)}, ${Math.round(pointer.y)}`;
+            
+            if (!isDrawing || !startPoint) return;
+            
+            // Remove temp object
+            if (tempObject) {
+                canvas.remove(tempObject);
+            }
+            
+            // Create temp object based on tool
+            if (currentTool === 'arrow') {
+                tempObject = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, true);
+            } else if (currentTool === 'line') {
+                tempObject = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], {
+                    stroke: strokeColor,
+                    strokeWidth: 3,
+                    selectable: false
+                });
+            } else if (currentTool === 'rect') {
+                tempObject = new fabric.Rect({
+                    left: Math.min(startPoint.x, pointer.x),
+                    top: Math.min(startPoint.y, pointer.y),
+                    width: Math.abs(pointer.x - startPoint.x),
+                    height: Math.abs(pointer.y - startPoint.y),
+                    fill: 'transparent',
+                    stroke: strokeColor,
+                    strokeWidth: 3
+                });
+            } else if (currentTool === 'circle') {
+                const radius = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2));
+                tempObject = new fabric.Circle({
+                    left: startPoint.x - radius,
+                    top: startPoint.y - radius,
+                    radius: radius,
+                    fill: 'transparent',
+                    stroke: strokeColor,
+                    strokeWidth: 3
+                });
+            }
+            
+            if (tempObject) {
+                canvas.add(tempObject);
+            }
+        });
+        
+        canvas.on('mouse:up', function(options) {
+            if (!isDrawing || !startPoint) return;
+            
+            const pointer = canvas.getPointer(options.e);
+            
+            if (tempObject) {
+                canvas.remove(tempObject);
+            }
+            
+            // Create final object
+            if (currentTool === 'arrow') {
+                const arrow = createArrow(startPoint.x, startPoint.y, pointer.x, pointer.y, strokeColor, false);
+                canvas.add(arrow);
+                saveDrawing(arrow);
+            } else if (currentTool === 'line') {
+                const line = new fabric.Line([startPoint.x, startPoint.y, pointer.x, pointer.y], {
+                    stroke: strokeColor,
+                    strokeWidth: 3,
+                    selectable: true
+                });
+                canvas.add(line);
+                saveDrawing(line);
+            } else if (currentTool === 'rect') {
+                const rect = new fabric.Rect({
+                    left: Math.min(startPoint.x, pointer.x),
+                    top: Math.min(startPoint.y, pointer.y),
+                    width: Math.abs(pointer.x - startPoint.x),
+                    height: Math.abs(pointer.y - startPoint.y),
+                    fill: 'transparent',
+                    stroke: strokeColor,
+                    strokeWidth: 3,
+                    selectable: true
+                });
+                canvas.add(rect);
+                saveDrawing(rect);
+            } else if (currentTool === 'circle') {
+                const radius = Math.sqrt(Math.pow(pointer.x - startPoint.x, 2) + Math.pow(pointer.y - startPoint.y, 2));
+                const circle = new fabric.Circle({
+                    left: startPoint.x - radius,
+                    top: startPoint.y - radius,
+                    radius: radius,
+                    fill: 'transparent',
+                    stroke: strokeColor,
+                    strokeWidth: 3,
+                    selectable: true
+                });
+                canvas.add(circle);
+                saveDrawing(circle);
+            }
+            
+            isDrawing = false;
+            startPoint = null;
+            tempObject = null;
+            canvas.renderAll();
+        });
+        
+        // Create arrow
+        function createArrow(x1, y1, x2, y2, color, isPreview) {
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const headLength = 20;
+            
+            const line = new fabric.Line([x1, y1, x2, y2], {
+                stroke: color,
+                strokeWidth: 3,
+                selectable: !isPreview
+            });
+            
+            const head = new fabric.Triangle({
+                left: x2,
+                top: y2,
+                width: headLength,
+                height: headLength,
+                fill: color,
+                angle: (angle * 180 / Math.PI) + 90,
+                originX: 'center',
+                originY: 'center',
+                selectable: !isPreview
+            });
+            
+            const group = new fabric.Group([line, head], {
+                selectable: !isPreview,
+                evented: !isPreview
+            });
+            
+            return group;
+        }
+        
+        // Add text
+        function addText(x, y) {
+            const text = new fabric.IText('텍스트', {
+                left: x,
+                top: y,
+                fill: strokeColor,
+                fontSize: 20,
+                fontFamily: 'Pretendard, sans-serif'
+            });
+            canvas.add(text);
+            canvas.setActiveObject(text);
+            text.enterEditing();
+            saveDrawing(text);
+        }
+        
+        // Show icon popup
+        function showIconPopup(x, y) {
+            const popup = document.getElementById('icon-popup');
+            popup.style.display = 'block';
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            document.getElementById('icon-name').value = '';
+            document.getElementById('icon-name').focus();
+            
+            document.getElementById('icon-confirm').onclick = () => {
+                const name = document.getElementById('icon-name').value.trim();
+                if (name) {
+                    addUserIcon(x, y, name, USER_COLOR);
+                    saveIconToDB(x, y, name, USER_COLOR);
+                }
+                popup.style.display = 'none';
+            };
+        }
+        
+        // Add user icon
+        function addUserIcon(x, y, name, color) {
+            const circle = new fabric.Circle({
+                radius: 20,
+                fill: color,
+                originX: 'center',
+                originY: 'center'
+            });
+            
+            const initial = new fabric.Text(name.charAt(0).toUpperCase(), {
+                fontSize: 18,
+                fill: '#fff',
+                originX: 'center',
+                originY: 'center',
+                fontWeight: 'bold'
+            });
+            
+            const label = new fabric.Text(name, {
+                fontSize: 12,
+                fill: '#fff',
+                top: 28,
+                originX: 'center',
+                backgroundColor: 'rgba(0,0,0,0.7)',
+                padding: 4
+            });
+            
+            const group = new fabric.Group([circle, initial, label], {
+                left: x,
+                top: y,
+                hasControls: false,
+                iconType: 'user',
+                userName: name,
+                borderColor: color,
+                userId: null
+            });
+            
+            canvas.add(group);
+            updateIconCount();
+            
+            // Make draggable and sync position
+            group.on('modified', () => {
+                syncIconPosition(group);
+            });
+            
+            return group;
+        }
+        
+        // Show flag popup
+        function showFlagPopup(x, y) {
+            const popup = document.getElementById('flag-popup');
+            popup.style.display = 'block';
+            popup.style.left = x + 'px';
+            popup.style.top = y + 'px';
+            document.getElementById('flag-memo').value = '';
+            document.getElementById('flag-memo').focus();
+            
+            document.getElementById('flag-confirm').onclick = () => {
+                const memo = document.getElementById('flag-memo').value.trim();
+                addFlag(x, y, memo);
+                saveFlagToDB(x, y, memo);
+                popup.style.display = 'none';
+            };
+        }
+        
+        // Add flag
+        function addFlag(x, y, memo) {
+            const flag = new fabric.Group([
+                new fabric.Triangle({
+                    width: 24,
+                    height: 24,
+                    fill: fillColor,
+                    originX: 'center',
+                    originY: 'center'
+                }),
+                new fabric.Rect({
+                    width: 4,
+                    height: 40,
+                    fill: '#888',
+                    top: 12,
+                    originX: 'center',
+                    originY: 'center'
+                })
+            ], {
+                left: x,
+                top: y,
+                hasControls: false,
+                iconType: 'flag',
+                flagMemo: memo,
+                flagId: null
+            });
+            
+            // Add memo label if exists
+            if (memo) {
+                const memoText = new fabric.Text(memo.length > 20 ? memo.substring(0, 20) + '...' : memo, {
+                    fontSize: 11,
+                    fill: '#e8e8e8',
+                    top: 50,
+                    originX: 'center',
+                    backgroundColor: 'rgba(0,0,0,0.8)',
+                    padding: 4
+                });
+                flag.addWithUpdate(memoText);
+            }
+            
+            canvas.add(flag);
+            updateFlagCount();
+            
+            flag.on('modified', () => {
+                syncFlagPosition(flag);
+            });
+            
+            return flag;
+        }
+        
+        // Update counts
+        function updateIconCount() {
+            const icons = canvas.getObjects().filter(o => o.iconType === 'user');
+            document.getElementById('icon-count').textContent = icons.length;
+        }
+        
+        function updateFlagCount() {
+            const flags = canvas.getObjects().filter(o => o.iconType === 'flag');
+            document.getElementById('flag-count').textContent = flags.length;
+        }
+        
+        // Context menu
+        canvas.on('mouse:down', function(options) {
+            if (options.target) {
+                showContextMenu(options.e, options.target);
+            } else {
+                hideContextMenu();
+            }
+        });
+        
+        function showContextMenu(e, target) {
+            const menu = document.getElementById('context-menu');
+            menu.style.display = 'block';
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            
+            document.getElementById('ctx-delete').onclick = () => {
+                deleteObject(target);
+                hideContextMenu();
+            };
+        }
+        
+        function hideContextMenu() {
+            document.getElementById('context-menu').style.display = 'none';
+        }
+        
+        // Delete object
+        function deleteObject(obj) {
+            if (obj.iconType === 'user') {
+                deleteIconFromDB(obj);
+            } else if (obj.iconType === 'flag') {
+                deleteFlagFromDB(obj);
+            } else {
+                deleteDrawingFromDB(obj);
+            }
+            canvas.remove(obj);
+            canvas.renderAll();
+            updateIconCount();
+            updateFlagCount();
+        }
+        
+        // Clear canvas
+        document.getElementById('clear-canvas').addEventListener('click', () => {
+            if (confirm('모든 요소를 삭제하시겠습니까?')) {
+                canvas.clear();
+                canvas.backgroundColor = '#0a0a14';
+                canvas.renderAll();
+            }
+        });
+        
+        // Supabase sync functions
+        async function saveIconToDB(x, y, name, color) {
+            if (!SUPABASE_URL || !SUPABASE_KEY) return;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/user_icons`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        session_id: SESSION_ID,
+                        user_name: name,
+                        x: Math.round(x),
+                        y: Math.round(y),
+                        border_color: color
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    // Update object with DB id
+                    const icons = canvas.getObjects().filter(o => o.iconType === 'user');
+                    if (icons.length > 0) {
+                        icons[icons.length - 1].userId = data[0]?.id;
+                    }
+                }
+            } catch (err) {
+                console.error('Error saving icon:', err);
+            }
+        }
+        
+        async function syncIconPosition(iconObj) {
+            if (!iconObj.userId) return;
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${iconObj.userId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        x: Math.round(iconObj.left),
+                        y: Math.round(iconObj.top)
+                    })
+                });
+            } catch (err) {
+                console.error('Error syncing icon:', err);
+            }
+        }
+        
+        async function deleteIconFromDB(iconObj) {
+            if (!iconObj.userId) return;
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/user_icons?id=eq.${iconObj.userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+            } catch (err) {
+                console.error('Error deleting icon:', err);
+            }
+        }
+        
+        async function saveFlagToDB(x, y, memo) {
+            if (!SUPABASE_URL || !SUPABASE_KEY) return;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/flags`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        session_id: SESSION_ID,
+                        x: Math.round(x),
+                        y: Math.round(y),
+                        memo: memo
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const flags = canvas.getObjects().filter(o => o.iconType === 'flag');
+                    if (flags.length > 0) {
+                        flags[flags.length - 1].flagId = data[0]?.id;
+                    }
+                }
+            } catch (err) {
+                console.error('Error saving flag:', err);
+            }
+        }
+        
+        async function syncFlagPosition(flagObj) {
+            if (!flagObj.flagId) return;
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${flagObj.flagId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        x: Math.round(flagObj.left),
+                        y: Math.round(flagObj.top)
+                    })
+                });
+            } catch (err) {
+                console.error('Error syncing flag:', err);
+            }
+        }
+        
+        async function deleteFlagFromDB(flagObj) {
+            if (!flagObj.flagId) return;
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/flags?id=eq.${flagObj.flagId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+            } catch (err) {
+                console.error('Error deleting flag:', err);
+            }
+        }
+        
+        async function saveDrawing(obj) {
+            if (!SUPABASE_URL || !SUPABASE_KEY) return;
+            
+            const type = obj.type || 'unknown';
+            const color = obj.stroke || obj.fill || '#e94560';
+            const strokeWidth = obj.strokeWidth || 3;
+            
+            let points = [];
+            if (type === 'line' || (type === 'group' && obj.left !== undefined)) {
+                points = [obj.left, obj.top, obj.left + (obj.width || 0), obj.top + (obj.height || 0)];
+            } else if (type === 'rect') {
+                points = [obj.left, obj.top, obj.width, obj.height];
+            } else if (type === 'circle') {
+                points = [obj.left, obj.top, obj.radius];
+            } else if (type === 'i-text') {
+                points = [obj.left, obj.top];
+            }
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/drawings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        session_id: SESSION_ID,
+                        type: type,
+                        points: JSON.stringify(points),
+                        color: color,
+                        stroke_width: strokeWidth
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    obj.drawingId = data[0]?.id;
+                }
+            } catch (err) {
+                console.error('Error saving drawing:', err);
+            }
+        }
+        
+        async function deleteDrawingFromDB(obj) {
+            if (!obj.drawingId) return;
+            
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/drawings?id=eq.${obj.drawingId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+            } catch (err) {
+                console.error('Error deleting drawing:', err);
+            }
+        }
+        
+        // Load existing data
+        async function loadSessionData() {
+            if (!SUPABASE_URL || !SUPABASE_KEY || !SESSION_ID) return;
+            
+            try {
+                // Load icons
+                const iconsRes = await fetch(
+                    `${SUPABASE_URL}/rest/v1/user_icons?session_id=eq.${SESSION_ID}`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+                const icons = await iconsRes.json();
+                icons.forEach(icon => {
+                    addUserIcon(icon.x, icon.y, icon.user_name, icon.border_color);
+                    const canvasIcons = canvas.getObjects().filter(o => o.iconType === 'user');
+                    if (canvasIcons.length > 0) {
+                        canvasIcons[canvasIcons.length - 1].userId = icon.id;
+                    }
+                });
+                
+                // Load flags
+                const flagsRes = await fetch(
+                    `${SUPABASE_URL}/rest/v1/flags?session_id=eq.${SESSION_ID}`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+                const flags = await flagsRes.json();
+                flags.forEach(flag => {
+                    addFlag(flag.x, flag.y, flag.memo);
+                    const canvasFlags = canvas.getObjects().filter(o => o.iconType === 'flag');
+                    if (canvasFlags.length > 0) {
+                        canvasFlags[canvasFlags.length - 1].flagId = flag.id;
+                    }
+                });
+                
+                // Load drawings
+                const drawingsRes = await fetch(
+                    `${SUPABASE_URL}/rest/v1/drawings?session_id=eq.${SESSION_ID}`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+                const drawings = await drawingsRes.json();
+                drawings.forEach(d => {
+                    loadDrawing(d);
+                });
+                
+            } catch (err) {
+                console.error('Error loading session data:', err);
+            }
+        }
+        
+        function loadDrawing(d) {
+            const points = JSON.parse(d.points || '[]');
+            let obj = null;
+            
+            if (d.type === 'line') {
+                obj = new fabric.Line(points, {
+                    stroke: d.color,
+                    strokeWidth: d.stroke_width
+                });
+            } else if (d.type === 'rect') {
+                obj = new fabric.Rect({
+                    left: points[0],
+                    top: points[1],
+                    width: points[2],
+                    height: points[3],
+                    fill: 'transparent',
+                    stroke: d.color,
+                    strokeWidth: d.stroke_width
+                });
+            } else if (d.type === 'circle') {
+                obj = new fabric.Circle({
+                    left: points[0],
+                    top: points[1],
+                    radius: points[2],
+                    fill: 'transparent',
+                    stroke: d.color,
+                    strokeWidth: d.stroke_width
+                });
+            } else if (d.type === 'i-text') {
+                obj = new fabric.IText(d.text || '텍스트', {
+                    left: points[0],
+                    top: points[1],
+                    fill: d.color,
+                    fontSize: 20
+                });
+            }
+            
+            if (obj) {
+                obj.drawingId = d.id;
+                canvas.add(obj);
+            }
+        }
+        
+        // Real-time subscription
+        let channel = null;
+        
+        async function setupRealtime() {
+            if (!SUPABASE_URL || !SUPABASE_KEY) return;
+            
+            // Note: Full realtime requires Supabase Pro or custom WebSocket server
+            // This is a simplified version using polling
+            document.getElementById('sync-status').classList.add('online');
+            document.getElementById('sync-status').classList.remove('offline');
+            document.getElementById('sync-text').textContent = '연결됨';
+            
+            // Poll for updates every 5 seconds
+            setInterval(loadSessionData, 5000);
+        }
+        
+        // Save button
+        document.getElementById('save-drawing').addEventListener('click', () => {
+            loadSessionData();
+            alert('저장되었습니다!');
+        });
+        
+        // Initialize
+        loadSessionData();
+        setupRealtime();
+        
+        // Send canvas ready event to Streamlit
+        window.parent.postMessage({ type: 'canvasReady' }, '*');
+    </script>
+</body>
+</html>

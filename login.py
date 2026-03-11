@@ -4,7 +4,8 @@ Login page - Entry point for War Map Strategy
 
 import streamlit as st
 import bcrypt
-from database import get_session, AdminUser, init_db
+from database import get_admin_by_username, create_admin_user
+from config import SUPABASE_URL, SUPABASE_KEY
 
 
 def init_session_state():
@@ -31,18 +32,17 @@ def verify_password(password: str, hashed: str) -> bool:
 
 def login(username: str, password: str) -> bool:
     """Login user"""
-    session = get_session()
-    try:
-        user = session.query(AdminUser).filter(AdminUser.username == username).first()
-        if user and verify_password(password, user.password_hash):
-            st.session_state.logged_in = True
-            st.session_state.user_id = user.id
-            st.session_state.nickname = user.nickname
-            st.session_state.username = user.username
-            return True
-        return False
-    finally:
-        session.close()
+    user = get_admin_by_username(username)
+    if user and verify_password(password, user["password_hash"]):
+        st.session_state.logged_in = True
+        st.session_state.user_id = user["id"]
+        st.session_state.nickname = user["nickname"]
+        st.session_state.username = user["username"]
+        # Store Supabase credentials for canvas component
+        st.session_state.supabase_url = SUPABASE_URL
+        st.session_state.supabase_key = SUPABASE_KEY
+        return True
+    return False
 
 
 def logout():
@@ -51,24 +51,20 @@ def logout():
     st.session_state.user_id = None
     st.session_state.nickname = None
     st.session_state.username = None
+    st.session_state.supabase_url = None
+    st.session_state.supabase_key = None
 
 
 def create_default_admin():
     """Create default admin user if not exists"""
-    session = get_session()
-    try:
-        admin = session.query(AdminUser).filter(AdminUser.username == "admin").first()
-        if not admin:
-            default_password = "admin123"  # Change in production
-            admin = AdminUser(
-                username="admin",
-                nickname="Admin",
-                password_hash=hash_password(default_password),
-            )
-            session.add(admin)
-            session.commit()
-    finally:
-        session.close()
+    existing = get_admin_by_username("admin")
+    if not existing:
+        default_password = "admin123"  # Change in production
+        create_admin_user(
+            username="admin",
+            nickname="Admin",
+            password_hash=hash_password(default_password),
+        )
 
 
 def main():
@@ -76,7 +72,6 @@ def main():
     st.set_page_config(page_title="전쟁맵 전략 - 로그인", page_icon="🗺️")
 
     init_session_state()
-    init_db()
     create_default_admin()
 
     # Redirect if already logged in

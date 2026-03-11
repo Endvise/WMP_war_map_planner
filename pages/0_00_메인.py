@@ -3,7 +3,25 @@ Main page - War Map Strategy Board
 """
 
 import streamlit as st
-from database import get_session, WarMapSession, UserIcon, Flag, Drawing
+import random
+from components import war_map_canvas
+from database import (
+    get_all_sessions,
+    get_session_by_id,
+    create_session as db_create_session,
+    delete_session as db_delete_session,
+    get_icons_by_session,
+    get_flags_by_session,
+    get_drawings_by_session,
+    create_icon,
+    update_icon_position,
+    delete_icon,
+    create_flag,
+    update_flag_memo,
+    delete_flag,
+    create_drawing,
+    delete_drawing,
+)
 
 
 def init_session_state():
@@ -13,52 +31,42 @@ def init_session_state():
     if "sessions" not in st.session_state:
         st.session_state.sessions = []
     if "user_color" not in st.session_state:
-        # Assign a random color for this user
-        import random
-
-        colors = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"]
+        colors = [
+            "#FF0000",
+            "#00FF00",
+            "#0000FF",
+            "#FFFF00",
+            "#FF00FF",
+            "#00FFFF",
+            "#FFA500",
+            "#800080",
+        ]
         st.session_state.user_color = random.choice(colors)
 
 
 def load_sessions():
-    """Load all sessions"""
-    session = get_session()
-    try:
-        sessions = session.query(WarMapSession).all()
-        st.session_state.sessions = [
-            {"id": s.id, "name": s.name, "event_type": s.event_type} for s in sessions
-        ]
-    finally:
-        session.close()
+    """Load all sessions from Supabase"""
+    sessions = get_all_sessions()
+    st.session_state.sessions = [
+        {"id": s["id"], "name": s["name"], "event_type": s.get("event_type", "general")}
+        for s in sessions
+    ]
 
 
 def create_session(name: str, event_type: str = "general"):
     """Create new session"""
-    session = get_session()
-    try:
-        new_session = WarMapSession(
-            name=name, event_type=event_type, created_by=st.session_state.user_id
-        )
-        session.add(new_session)
-        session.commit()
-        load_sessions()
-    finally:
-        session.close()
+    db_create_session(
+        name=name, event_type=event_type, created_by=st.session_state.user_id
+    )
+    load_sessions()
 
 
 def delete_session(session_id: int):
     """Delete session"""
-    session = get_session()
-    try:
-        # Delete related items first
-        session.query(UserIcon).filter(UserIcon.session_id == session_id).delete()
-        session.query(Flag).filter(Flag.session_id == session_id).delete()
-        session.query(Drawing).filter(Drawing.session_id == session_id).delete()
-        session.query(WarMapSession).filter(WarMapSession.id == session_id).delete()
-        session.commit()
-        load_sessions()
-    finally:
-        session.close()
+    db_delete_session(session_id)
+    if st.session_state.current_session_id == session_id:
+        st.session_state.current_session_id = None
+    load_sessions()
 
 
 def main():
@@ -116,8 +124,18 @@ def main():
     )
 
     if st.session_state.current_session_id:
-        st.info(f"현재 세션: {st.session_state.current_session_id}")
-        # TODO: Load map canvas here
+        session = get_session_by_id(st.session_state.current_session_id)
+        st.info(f"현재 세션: {session['name'] if session else 'Unknown'}")
+
+        # Render War Map Canvas
+        war_map_canvas(
+            supabase_url=st.session_state.get("supabase_url", ""),
+            supabase_key=st.session_state.get("supabase_key", ""),
+            session_id=st.session_state.current_session_id,
+            user_nickname=st.session_state.get("nickname", "User"),
+            user_color=st.session_state.get("user_color", "#e94560"),
+            key=f"canvas_{st.session_state.current_session_id}",
+        )
     else:
         st.info("왼쪽에서 이벤트를 선택하거나 새로 추가하세요.")
 

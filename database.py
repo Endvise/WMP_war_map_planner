@@ -31,6 +31,55 @@ def get_admin_by_username(username: str):
     return response.data[0] if response.data else None
 
 
+def get_admin_by_id(admin_id: int):
+    """Get admin user by ID"""
+    client = get_client()
+    response = (
+        client.table(TABLE_ADMIN_USERS).select("*").eq("id", admin_id).execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def get_all_admins():
+    """Get all admin users"""
+    client = get_client()
+    response = client.table(TABLE_ADMIN_USERS).select("*").execute()
+    return response.data
+
+
+def create_admin_user(username: str, nickname: str, password_hash: str, is_master: bool = False):
+    """Create admin user"""
+    client = get_client()
+    response = (
+        client.table(TABLE_ADMIN_USERS)
+        .insert(
+            {
+                "username": username,
+                "nickname": nickname,
+                "password_hash": password_hash,
+                "is_master": is_master
+            }
+        )
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def delete_admin_user(admin_id: int):
+    """Delete admin user"""
+    client = get_client()
+    client.table(TABLE_ADMIN_USERS).delete().eq("id", admin_id).execute()
+
+
+def get_admin_by_username(username: str):
+    """Get admin user by username"""
+    client = get_client()
+    response = (
+        client.table(TABLE_ADMIN_USERS).select("*").eq("username", username).execute()
+    )
+    return response.data[0] if response.data else None
+
+
 def create_admin_user(username: str, nickname: str, password_hash: str):
     """Create admin user"""
     client = get_client()

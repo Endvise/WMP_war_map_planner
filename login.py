@@ -38,6 +38,19 @@ def login(username: str, password: str) -> bool:
         st.session_state.user_id = user["id"]
         st.session_state.nickname = user["nickname"]
         st.session_state.username = user["username"]
+        st.session_state.is_master_admin = user.get("is_master", False)
+        # Store Supabase credentials for canvas component
+        st.session_state.supabase_url = SUPABASE_URL
+        st.session_state.supabase_key = SUPABASE_KEY
+        return True
+    return False
+    """Login user"""
+    user = get_admin_by_username(username)
+    if user and verify_password(password, user["password_hash"]):
+        st.session_state.logged_in = True
+        st.session_state.user_id = user["id"]
+        st.session_state.nickname = user["nickname"]
+        st.session_state.username = user["username"]
         # Store Supabase credentials for canvas component
         st.session_state.supabase_url = SUPABASE_URL
         st.session_state.supabase_key = SUPABASE_KEY
@@ -56,6 +69,16 @@ def logout():
 
 
 def create_default_admin():
+    """Create default admin user if not exists"""
+    existing = get_admin_by_username("admin")
+    if not existing:
+        default_password = "admin123"  # Change in production
+        create_admin_user(
+            username="admin",
+            nickname="Admin",
+            password_hash=hash_password(default_password),
+            is_master=True  # First admin is master
+        )
     """Create default admin user if not exists"""
     existing = get_admin_by_username("admin")
     if not existing:

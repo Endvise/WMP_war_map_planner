@@ -106,6 +106,19 @@ def main():
 
         st.divider()
 
+        # Admin management link (master admin only)
+        if st.session_state.get('is_master_admin'):
+            if st.button("⚙️ 관리자 설정", key="admin_settings"):
+                st.switch_page("pages/1_01_관리자설정.py")
+
+        # Logout
+        if st.button("🚪 로그아웃", key="logout"):
+            st.switch_page("../login.py")
+
+        st.divider()
+
+        # Session list
+
         # Session list
         for s in st.session_state.sessions:
             col1, col2 = st.columns([3, 1])

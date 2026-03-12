@@ -6,6 +6,10 @@ import streamlit as st
 import bcrypt
 from database import get_admin_by_username, create_admin_user
 from config import SUPABASE_URL, SUPABASE_KEY
+import streamlit as st
+
+# 앱 시작 시 가장 먼저 실행되어야 합니다
+st.set_page_config(layout="wide")
 
 
 def init_session_state():

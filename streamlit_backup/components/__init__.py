@@ -14,6 +14,8 @@ def war_map_canvas(
     user_color: str,
     user_id: int = 0,
     key: str = "war_map_canvas",
+    # height는 800 이상으로 넉넉히 잡고, width는 None으로 설정하여 부모 컨테이너에 맞춤
+    components.html(html_content, height=900, width=None, scrolling=False),
 ):
     """
     Render the Fabric.js war map canvas component.
